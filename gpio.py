@@ -1,8 +1,8 @@
 import OPi.GPIO as GPIO
 
 GPIO.setmode(GPIO.BOARD)
-button1 = 12
-button2 = 15
+button1 = 72
+button2 = 75
 
 GPIO.setup(button1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(button1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
