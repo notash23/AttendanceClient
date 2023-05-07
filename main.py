@@ -7,6 +7,8 @@ import numpy as np
 import cv2
 import threading
 import pyzbar.pyzbar as bar
+import OPi.GPIO as GPIO
+from OPi.constants import GPIO as GPIO_CONST
 
 SERVER = "192.168.100.89"
 PORT = 5050
@@ -103,6 +105,8 @@ class Server:
             self.state = State.STAFF_SELECT
 
     def respondStaffLeave(self, accept):
+        if self.state != State.STAFF_SELECT:
+            return
         self.state = State.LOADING
         if accept:
             self.__send(OpCode.STAFF_ATTENDANCE, {"setLeave": "yes"})
@@ -172,13 +176,12 @@ def main():
                           cv2.WINDOW_FULLSCREEN)
     font = cv2.FONT_HERSHEY_TRIPLEX
 
-    def mouse_click(event, x, y,
-                    flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN and server.state == State.STAFF_SELECT:
-            print(x, y, flags, param)
-
-    cv2.setMouseCallback(CAMERA_VIEW, mouse_click)
     server = Server()
+    GPIO.setmode(GPIO_CONST.SUNXI)
+    buttons = ["PC8", "PC11"]
+    GPIO.setup(buttons, GPIO_CONST.IN, GPIO_CONST.HIGH)
+    GPIO.add_event_detect(buttons[0], GPIO_CONST.FALLING, callback=server.respondStaffLeave(True))
+    GPIO.add_event_detect(buttons[1], GPIO_CONST.FALLING, callback=server.respondStaffLeave(False))
 
     # Makes a loading animation while waiting for connection
     dots = '.'
@@ -226,6 +229,7 @@ def main():
         elif server.state == State.STAFF_SELECT:
             frame = np.full([400, 400, 3], (255, 255, 255), dtype=np.uint8)
             cv2.putText(frame, "Are you leaving?", (100, 100), font, 1, (0, 0, 0))
+            cv2.putText(frame, server.response["Surname"], (100, 200), font, 1, (255, 255, 255))
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.ERROR:
             frame = np.full([400, 400, 3], 1, dtype=np.uint8)
