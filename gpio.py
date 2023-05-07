@@ -3,7 +3,7 @@ import sys
 import OPi.GPIO as GPIO
 
 
-GPIO.setmode(GPIO.BCM)
+GPIO.setmode(GPIO.BOARD)
 button = int(sys.argv[1])
 
 GPIO.setup(button, GPIO.IN)
