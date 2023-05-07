@@ -1,10 +1,9 @@
 import OPi.GPIO as GPIO
 
 GPIO.setmode(GPIO.BOARD)
-button1 = 15
+button1 = 8
 
-GPIO.setup(button1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(button1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(button1, GPIO.IN)
 
 while True:
     if GPIO.input(button1):
