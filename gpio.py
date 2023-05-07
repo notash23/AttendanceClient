@@ -3,11 +3,13 @@ import sys
 import OPi.GPIO as GPIO
 
 
-GPIO.setmode(GPIO.BOARD)
-button = int(sys.argv[0])
+GPIO.setmode(GPIO.BCM)
+button = int(sys.argv[1])
 
 GPIO.setup(button, GPIO.IN)
 
 while True:
     GPIO.wait_for_edge(button, GPIO.BOTH)
     print("State of this button changed")
+    sleep(1)
+GPIO.cleanup()
