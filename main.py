@@ -8,7 +8,6 @@ import cv2
 import threading
 import pyzbar.pyzbar as bar
 import OPi.GPIO as GPIO
-from OPi.constants import GPIO as GPIO_CONST
 
 SERVER = "192.168.100.89"
 PORT = 5050
@@ -177,11 +176,11 @@ def main():
     font = cv2.FONT_HERSHEY_TRIPLEX
 
     server = Server()
-    GPIO.setmode(GPIO_CONST.SUNXI)
+    GPIO.setmode(GPIO.SUNXI)
     buttons = ["PC8", "PC11"]
-    GPIO.setup(buttons, GPIO_CONST.IN, GPIO_CONST.HIGH)
-    GPIO.add_event_detect(buttons[0], GPIO_CONST.FALLING, callback=server.respondStaffLeave(True))
-    GPIO.add_event_detect(buttons[1], GPIO_CONST.FALLING, callback=server.respondStaffLeave(False))
+    GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
+    GPIO.add_event_detect(buttons[0], GPIO.FALLING, callback=server.respondStaffLeave(True))
+    GPIO.add_event_detect(buttons[1], GPIO.FALLING, callback=server.respondStaffLeave(False))
 
     # Makes a loading animation while waiting for connection
     dots = '.'
