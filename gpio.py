@@ -1,14 +1,13 @@
 from time import sleep
-
+import sys
 import OPi.GPIO as GPIO
 
 
 GPIO.setmode(GPIO.BOARD)
-button1 = 8
+button = int(sys.argv[0])
 
-GPIO.setup(button1, GPIO.IN)
+GPIO.setup(button, GPIO.IN)
 
 while True:
-    if GPIO.input(button1):
-        print("Button 1 has been pressed")
-    sleep(1)
+    GPIO.wait_for_edge(button, GPIO.BOTH)
+    print("State of this button changed")
