@@ -4,8 +4,8 @@ GPIO.setmode(GPIO.BOARD)
 button1 = 12
 button2 = 15
 
-GPIO.setmode(button1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setmode(button1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(button1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(button1, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 while True:
     if GPIO.input(button1):
