@@ -103,8 +103,9 @@ class Server:
             self.response = response[1]
             self.state = State.STAFF_SELECT
 
-    def respondStaffLeave(self, accept):
-        print(f"button clicked with {accept}")
+    def respondStaffLeave(self):
+        GPIO.wait_for_edge("PC11", GPIO.FALLING, timeout=5000)
+        accept = True
         if self.state != State.STAFF_SELECT:
             return
         self.state = State.LOADING
@@ -180,8 +181,6 @@ def main():
     GPIO.setmode(GPIO.SUNXI)
     buttons = ["PC8", "PC11"]
     GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
-    GPIO.add_event_callback(buttons[0], callback=server.respondStaffLeave(True))
-    GPIO.add_event_callback(buttons[1], callback=server.respondStaffLeave(False))
 
     # Makes a loading animation while waiting for connection
     dots = '.'
@@ -227,6 +226,7 @@ def main():
                 cv2.waitKey(int(borat_fps))
             server.setState(State.SCAN)
         elif server.state == State.STAFF_SELECT:
+            threading.Thread(target=server.respondStaffLeave).start()
             frame = np.full([400, 400, 3], (255, 255, 255), dtype=np.uint8)
             cv2.putText(frame, "Are you leaving?", (100, 100), font, 1, (0, 0, 0))
             cv2.putText(frame, server.response["Surname"], (100, 200), font, 1, (255, 255, 255))
