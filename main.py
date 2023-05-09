@@ -176,11 +176,11 @@ def main():
     font = cv2.FONT_HERSHEY_TRIPLEX
 
     server = Server()
-    # GPIO.setmode(GPIO.SUNXI)
-    # buttons = ["PC8", "PC11"]
-    # GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
-    # GPIO.add_event_detect(buttons[0], GPIO.FALLING, callback=server.respondStaffLeave(True))
-    # GPIO.add_event_detect(buttons[1], GPIO.FALLING, callback=server.respondStaffLeave(False))
+    GPIO.setmode(GPIO.SUNXI)
+    buttons = ["PC8", "PC11"]
+    GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
+    GPIO.add_event_detect(buttons[0], GPIO.FALLING, callback=server.respondStaffLeave(True))
+    GPIO.add_event_detect(buttons[1], GPIO.FALLING, callback=server.respondStaffLeave(False))
 
     # Makes a loading animation while waiting for connection
     dots = '.'
