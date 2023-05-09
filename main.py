@@ -231,6 +231,7 @@ def main():
             cv2.putText(frame, server.response["Surname"], (100, 200), font, 1, (255, 255, 255))
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.ERROR:
+            print(server.response)
             frame = np.full([400, 400, 3], 1, dtype=np.uint8)
             cv2.putText(frame, "ERROR", (200, 200), font, 0.6,
                         (0, 0, 255), 2)
