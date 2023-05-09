@@ -104,6 +104,7 @@ class Server:
             self.state = State.STAFF_SELECT
 
     def respondStaffLeave(self, accept):
+        print(f"button clicked with {accept}")
         if self.state != State.STAFF_SELECT:
             return
         self.state = State.LOADING
@@ -243,6 +244,7 @@ def main():
         if cv2.getWindowProperty(CAMERA_VIEW, cv2.WND_PROP_VISIBLE) < 1:
             break
     cap.release()
+    GPIO.cleanup()
     cv2.destroyAllWindows()
     server.shutdown()
 
