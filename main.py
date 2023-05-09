@@ -180,8 +180,8 @@ def main():
     GPIO.setmode(GPIO.SUNXI)
     buttons = ["PC8", "PC11"]
     GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
-    GPIO.add_event_detect(buttons[0], GPIO.FALLING, callback=server.respondStaffLeave(True))
-    GPIO.add_event_detect(buttons[1], GPIO.FALLING, callback=server.respondStaffLeave(False))
+    GPIO.add_event_callback(buttons[0], callback=server.respondStaffLeave(True))
+    GPIO.add_event_callback(buttons[1], callback=server.respondStaffLeave(False))
 
     # Makes a loading animation while waiting for connection
     dots = '.'
