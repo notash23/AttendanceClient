@@ -9,5 +9,3 @@ print("falling")
 GPIO.wait_for_edge(buttons[0], GPIO.FALLING)
 print("falling again")
 GPIO.cleanup()
-
-886
