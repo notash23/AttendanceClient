@@ -48,6 +48,11 @@ class OpCode(Enum):
     DISCONNECT = 5
 
 
+class ButtonCode(Enum):
+    YES = "PC8"
+    NO = "PC11"
+
+
 class Server:
     def __init__(self):
         self.state = State.DISCONNECTED
@@ -103,13 +108,11 @@ class Server:
             self.response = response[1]
             self.state = State.STAFF_SELECT
 
-    def respondStaffLeave(self):
-        GPIO.wait_for_edge("PC11", GPIO.FALLING, timeout=5000)
-        accept = True
+    def respondStaffLeave(self, button):
         if self.state != State.STAFF_SELECT:
             return
         self.state = State.LOADING
-        if accept:
+        if button == ButtonCode.YES.value:
             self.__send(OpCode.STAFF_ATTENDANCE, {"setLeave": "yes"})
             response = self.__receive()
             if not response:
@@ -121,7 +124,7 @@ class Server:
                 self.state = State.ERROR
                 time.sleep(2)
                 self.state = State.SCAN
-        else:
+        elif button == ButtonCode.NO.value:
             self.__send(OpCode.STAFF_ATTENDANCE)
 
     def setState(self, state):
@@ -179,8 +182,10 @@ def main():
 
     server = Server()
     GPIO.setmode(GPIO.SUNXI)
-    buttons = ["PC8", "PC11"]
+    buttons = [ButtonCode.YES.value, ButtonCode.NO.value]
     GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
+    GPIO.add_event_detect(buttons[0], trigger=GPIO.FALLING, callback=server.respondStaffLeave)
+    GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=server.respondStaffLeave)
 
     # Makes a loading animation while waiting for connection
     dots = '.'
