@@ -16,5 +16,4 @@ print("waiting")
 GPIO.add_event_detect(buttons[0], trigger=GPIO.FALLING, callback=thread1)
 GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=thread2)
 while True:
-    GPIO.wait_for_edge("PC8", GPIO.FALLING)
-GPIO.cleanup()
+    pass
