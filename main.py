@@ -183,6 +183,7 @@ def main():
     server = Server()
     GPIO.setmode(GPIO.SUNXI)
     buttons = [ButtonCode.YES.value, ButtonCode.NO.value]
+    print(buttons)
     GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
     GPIO.add_event_detect(buttons[0], trigger=GPIO.FALLING, callback=server.respondStaffLeave)
     GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=server.respondStaffLeave)
@@ -249,7 +250,7 @@ def main():
         if cv2.getWindowProperty(CAMERA_VIEW, cv2.WND_PROP_VISIBLE) < 1:
             break
     cap.release()
-    GPIO.cleanup()
+    GPIO.cleanup(buttons)
     cv2.destroyAllWindows()
     server.shutdown()
 
