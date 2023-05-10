@@ -109,6 +109,7 @@ class Server:
             self.state = State.STAFF_SELECT
 
     def respondStaffLeave(self, button):
+        print(button)
         if self.state != State.STAFF_SELECT:
             return
         self.state = State.LOADING
