@@ -219,7 +219,7 @@ def main():
                             server.setLoading()
                             threading.Thread(target=server.sendAttendance, args=(myData,)).start()
                     except KeyboardInterrupt:
-                        raise Exception("error")
+                        server.state = State.ERROR
                 cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.LOADING:
             frame = np.full([400, 400, 3], (255, 255, 255), dtype=np.uint8)
