@@ -5,15 +5,17 @@ def thread1():
     print("button1")
 
 
-def thread2():
-    print("button2")
-
-
 GPIO.setmode(GPIO.SUNXI)
-buttons = ["PC8", "PC11"]
+buttons = "PC8"
 GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
 print("waiting")
 GPIO.add_event_detect(buttons[0], trigger=GPIO.FALLING, callback=thread1)
-GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=thread2)
-while True:
+try:
+    while True:
+        pass # your code
+
+except KeyboardInterrupt:
     pass
+finally:
+    print("\nRelease the used pin(s)")
+    GPIO.cleanup()
