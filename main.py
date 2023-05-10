@@ -9,7 +9,7 @@ import threading
 import pyzbar.pyzbar as bar
 import OPi.GPIO as GPIO
 
-SERVER = "192.168.100.89"
+SERVER = "192.168.100.1"
 PORT = 5050
 ADDR = (SERVER, PORT)
 HEADER = 4
