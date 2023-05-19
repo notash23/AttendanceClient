@@ -16,17 +16,59 @@ HEADER = 4
 OPCODE = 1
 FORMAT = 'utf-8'
 CAMERA_VIEW = 'CameraView'
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 
-def decrypt(InString):
-    ValueSet = InString.split("!")
-    OutString = ""
+def decrypt(in_string):
+    value_set = in_string.split("!")
+    out_string = ""
     try:
-        for char in ValueSet[0]:
-            OutString += chr(ord(char) + int(ValueSet[1]) - len(ValueSet[0]))
+        for char in value_set[0]:
+            out_string += chr(ord(char) + int(value_set[1]) - len(value_set[0]))
     except IndexError:
         return ""
-    return OutString
+    return out_string
+
+
+def make_paragraph(in_string: str):
+    string_dimensions = cv2.getTextSize(in_string, font, 1, 1)
+    if string_dimensions[0][0] < 460:
+        return [(in_string, string_dimensions[0])], string_dimensions[0][1]
+    words = in_string.split()
+    lines = []
+    current_line = ""
+    height = 0
+    for word in words:
+        current_line_dimension = cv2.getTextSize(current_line + word + " ", font, 1, 1)
+        if current_line_dimension[0][0] < 460:
+            current_line += word + " "
+        else:
+            string_dimensions = cv2.getTextSize(current_line[:-1], font, 1, 1)
+            lines.append((current_line[:-1], string_dimensions[0]))
+            height += string_dimensions[0][1] + 15
+            current_line = word + " "
+            if height > 300:
+                lines[-2] = lines[-2][0][:-4] + "...", lines[-2][1]
+                return lines[:-1], height
+    string_dimensions = cv2.getTextSize(current_line[:-1], font, 1, 1)
+    lines.append((current_line[:-1], string_dimensions[0]))
+    height += string_dimensions[0][1] + 15
+    if height > 300:
+        lines[-2] = lines[-2][0][:-4] + "...", lines[-2][1]
+        return lines[:-1], height
+    return lines, height
+
+
+def center_text_with_ellipsis(in_string):
+    string_dimensions = cv2.getTextSize(in_string, font, 1, 2)
+    if string_dimensions[0][0] < 460:
+        return in_string, string_dimensions[0]
+    i = 20
+    while cv2.getTextSize(in_string[:i], font, 1, 2)[0][0] < 460:
+        i += 1
+    print(in_string[:i])
+    out_string = in_string[:i - 3] + "..."
+    return out_string, cv2.getTextSize(out_string, font, 1, 2)[0]
 
 
 class State(Enum):
@@ -58,9 +100,9 @@ class Server:
         self.state = State.DISCONNECTED
         self.response = None
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        threading.Thread(target=self.awaitConnection).start()
+        threading.Thread(target=self.await_connection).start()
 
-    def awaitConnection(self):
+    def await_connection(self):
         self.server.settimeout(5)
         while self.server.connect_ex(ADDR) != 0:
             if self.state == State.SHUT_DOWN:
@@ -77,6 +119,7 @@ class Server:
             return
         if response[0] == OpCode.DISCONNECT.value:
             self.state = State.ERROR
+            self.response = make_paragraph(response[1]["error"])
             self.server.close()
             time.sleep(2)
             self.state = State.DISCONNECTED
@@ -88,27 +131,30 @@ class Server:
         self.__send(OpCode.DISCONNECT)
         self.state = State.SHUT_DOWN
 
-    def setLoading(self):
+    def set_loading(self):
         self.state = State.LOADING
 
-    def sendAttendance(self, msg):
+    def send_attendance(self, msg):
         self.__send(OpCode.ATTENDANCE, {"attendanceString": msg})
         response = self.__receive()
         if not response:
             return
         if response[0] == OpCode.SUCCESSFUL.value:
-            self.response = response[1]
+            self.response = {"Name": center_text_with_ellipsis(response[1]["Name"])}
             self.state = State.SUCCESS
         elif response[0] == OpCode.UNSUCCESSFUL.value:
-            self.response = response[1]
+            self.response = make_paragraph(response[1]["error"])
             self.state = State.ERROR
             time.sleep(2)
             self.state = State.SCAN
         elif response[0] == OpCode.STAFF_ATTENDANCE.value:
-            self.response = response[1]
+            formatted_dict = {}
+            for key, value in response[1].items():
+                formatted_dict[key] = center_text_with_ellipsis(value)
+            self.response = formatted_dict
             self.state = State.STAFF_SELECT
 
-    def respondStaffLeave(self, button):
+    def respond_staff_leave(self, button):
         print(button)
         if self.state != State.STAFF_SELECT:
             return
@@ -122,20 +168,21 @@ class Server:
                 self.response = response[1]
                 self.state = State.SUCCESS
             elif response[0] == OpCode.UNSUCCESSFUL.value:
+                self.response = make_paragraph(response[1]["error"])
                 self.state = State.ERROR
                 time.sleep(2)
                 self.state = State.SCAN
         elif button == ButtonCode.NO.value:
             self.__send(OpCode.STAFF_ATTENDANCE)
 
-    def setState(self, state):
+    def set_state(self, state):
         self.state = state
 
-    def __send(self, opcode, outJson=None):
-        if outJson is None:
-            outJson = {}
-        jsonStr = json.dumps(outJson)
-        msg = jsonStr.encode(FORMAT)
+    def __send(self, opcode, out_json=None):
+        if out_json is None:
+            out_json = {}
+        json_string = json.dumps(out_json)
+        msg = json_string.encode(FORMAT)
         msg_length = len(msg)
         self.server.send(opcode.value.to_bytes(length=OPCODE, byteorder=sys.byteorder, signed=False))
         self.server.send(msg_length.to_bytes(length=HEADER, byteorder=sys.byteorder, signed=False))
@@ -152,42 +199,40 @@ class Server:
 
 
 def main():
-    gifCap = cv2.VideoCapture(r'resources/nyan-cat.mp4')
-    nyan_fps = 1000 / gifCap.get(cv2.CAP_PROP_FPS)
+    gif_cap = cv2.VideoCapture(r'resources/nyan-cat.mp4')
+    nyan_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
     nyan_frames = []
 
     # Play the video once and store the frames in an array
-    while gifCap.isOpened():
-        _ret, f = gifCap.read()
+    while gif_cap.isOpened():
+        _ret, f = gif_cap.read()
         if f is None:
             break
         nyan_frames.append(f)
-    gifCap.release()
+    gif_cap.release()
 
-    gifCap = cv2.VideoCapture(r'resources/borat-nice.mp4')
-    borat_fps = 1000 / gifCap.get(cv2.CAP_PROP_FPS)
+    gif_cap = cv2.VideoCapture(r'resources/borat-nice.mp4')
+    borat_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
     borat_frames = []
 
     # Play the video once and store the frames in an array
-    while gifCap.isOpened():
-        _ret, f = gifCap.read()
+    while gif_cap.isOpened():
+        _ret, f = gif_cap.read()
         if f is None:
             break
         borat_frames.append(f)
-    gifCap.release()
+    gif_cap.release()
 
     cv2.namedWindow(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN,
                           cv2.WINDOW_FULLSCREEN)
-    font = cv2.FONT_HERSHEY_TRIPLEX
 
     server = Server()
     GPIO.setmode(GPIO.SUNXI)
     buttons = [ButtonCode.YES.value, ButtonCode.NO.value]
-    print(buttons)
     GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
-    GPIO.add_event_detect(buttons[0], trigger=GPIO.FALLING, callback=server.respondStaffLeave)
-    GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=server.respondStaffLeave)
+    GPIO.add_event_detect(buttons[0], trigger=GPIO.FALLING, callback=server.respond_staff_leave)
+    GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=server.respond_staff_leave)
 
     # Makes a loading animation while waiting for connection
     dots = '.'
@@ -202,7 +247,8 @@ def main():
             dots = '.'
         else:
             dots += '.'
-        frame = cv2.putText(nyan_frames[index], f"Connecting{dots}", (20, 50), font, 0.7, (255, 255, 255))
+        frame = cv2.putText(nyan_frames[index], f"Connecting{dots}", (45, 165), font, 2, (255, 255, 255), 5,
+                            cv2.LINE_AA)
         cv2.imshow(CAMERA_VIEW, frame)
         cv2.waitKey(int(nyan_fps))
 
@@ -214,35 +260,47 @@ def main():
         if server.state == State.SCAN:
             if cap.isOpened():
                 for barcode in bar.decode(frame):
-                    myData = barcode.data.decode('utf-8')
+                    my_data = barcode.data.decode('utf-8')
                     try:
-                        if myData is not None:
-                            server.setLoading()
-                            threading.Thread(target=server.sendAttendance, args=(myData,)).start()
+                        if my_data is not None:
+                            server.set_loading()
+                            threading.Thread(target=server.send_attendance, args=(my_data,)).start()
                     except KeyboardInterrupt:
                         server.state = State.ERROR
                 cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.LOADING:
-            frame = np.full([400, 400, 3], (255, 255, 255), dtype=np.uint8)
-            cv2.putText(frame, "Loading", (100, 200), font, 0.6, (0, 0, 0), 2)
+            frame = np.full([320, 480, 3], (255, 255, 255), dtype=np.uint8)
+            cv2.putText(frame, "Loading", (120, 160), font, 2, (0, 0, 0), 2, cv2.LINE_AA)
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.SUCCESS:
             for frame in borat_frames:
-                cv2.putText(frame, server.response["Name"], (100, 100), font, 1, (255, 255, 255))
+                cv2.putText(frame, server.response["Name"][0], (int(240 - server.response["Name"][1][0] / 2), 100),
+                            font, 1, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.imshow(CAMERA_VIEW, frame)
                 cv2.waitKey(int(borat_fps))
-            server.setState(State.SCAN)
+            server.set_state(State.SCAN)
         elif server.state == State.STAFF_SELECT:
-            threading.Thread(target=server.respondStaffLeave).start()
-            frame = np.full([400, 400, 3], (255, 255, 255), dtype=np.uint8)
-            cv2.putText(frame, "Are you leaving?", (100, 100), font, 1, (0, 0, 0))
-            cv2.putText(frame, server.response["Surname"], (100, 200), font, 1, (255, 255, 255))
+            threading.Thread(target=server.respond_staff_leave).start()
+            frame = np.full([320, 480, 3], (255, 255, 255), dtype=np.uint8)
+            cv2.putText(frame, "Are you leaving?", (104, 40), font, 1, (0, 0, 0), 2, cv2.LINE_AA)
+            cv2.putText(frame, server.response["SIC"][0], (int(240 - server.response["SIC"][1][0] / 2),
+                                                           int(100 + server.response["SIC"][1][1] / 2)), font, 1,
+                        (0, 0, 0), 1, cv2.LINE_AA)
+            cv2.putText(frame, server.response["Name"][0],
+                        (int(240 - server.response["Name"][1][0] / 2), int(170 + server.response["Name"][1][1] / 2)),
+                        font, 1, (0, 0, 0))
+            cv2.putText(frame, server.response["Department"][0],
+                        (int(240 - server.response["Department"][1][0] / 2), 275), font, 1, (0, 0, 0))
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.ERROR:
             print(server.response)
             frame = np.full([400, 400, 3], 1, dtype=np.uint8)
-            cv2.putText(frame, "ERROR", (200, 200), font, 0.6,
-                        (0, 0, 255), 2)
+            height = int(160 - server.response[1] / 2)
+            for error_line in server.response[0]:
+                height += error_line[1][1] + 15
+                print(height)
+                cv2.putText(frame, error_line[0], (int(240 - error_line[1][0] / 2), height),
+                            font, 1, (0, 0, 255), 2, cv2.LINE_AA)
             cv2.imshow(CAMERA_VIEW, frame)
         else:
             success, frame = cap.read()
