@@ -1,3 +1,3 @@
 # AttendanceClient
 
-![Logitek](image.jpg)
+![Logitek](pyramid.png)
