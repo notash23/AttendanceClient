@@ -238,6 +238,9 @@ def main():
     dots = '.'
     index = 0
     while server.state == State.DISCONNECTED:
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
+            break
         if index == len(nyan_frames) - 1:
             index = 0
         else:
@@ -257,6 +260,9 @@ def main():
     # Matches state to show frame
     while server.state != State.DISCONNECTED:
         success, frame = cap.read()
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
+            break
         if server.state == State.SCAN:
             if cap.isOpened():
                 for barcode in bar.decode(frame):
