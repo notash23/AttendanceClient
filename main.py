@@ -208,7 +208,7 @@ def main():
         _ret, f = gif_cap.read()
         if f is None:
             break
-        nyan_frames.append(cv2.resize(f, (320, 480)))
+        nyan_frames.append(cv2.resize(f, (480, 320)))
     gif_cap.release()
 
     gif_cap = cv2.VideoCapture(r'resources/borat-nice.mp4')
@@ -220,7 +220,7 @@ def main():
         _ret, f = gif_cap.read()
         if f is None:
             break
-        borat_frames.append(cv2.resize(f, (320, 480)))
+        borat_frames.append(cv2.resize(f, (480, 320)))
     gif_cap.release()
 
     cv2.namedWindow(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN)
