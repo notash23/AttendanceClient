@@ -1,3 +1,3 @@
 # AttendanceClient
 
-![Logitek](pyramid.png)
+This is the client app for the MauSchool project
