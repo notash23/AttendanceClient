@@ -299,7 +299,6 @@ def main():
                         (int(240 - server.response["Department"][1][0] / 2), 275), font, 1, (0, 0, 0))
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.ERROR:
-            print(server.response)
             frame = np.full([400, 400, 3], 1, dtype=np.uint8)
             height = int(160 - server.response[1] / 2)
             for error_line in server.response[0]:
