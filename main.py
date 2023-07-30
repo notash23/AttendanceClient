@@ -303,10 +303,9 @@ def main():
             frame = np.full([400, 400, 3], 1, dtype=np.uint8)
             height = int(160 - server.response[1] / 2)
             for error_line in server.response[0]:
-                height += error_line[1][1] + 15
-                print(height)
                 cv2.putText(frame, error_line[0], (int(240 - error_line[1][0] / 2), height),
                             font, 1, (0, 0, 255), 2, cv2.LINE_AA)
+                height += error_line[1][1] + 15
             cv2.imshow(CAMERA_VIEW, frame)
         else:
             success, frame = cap.read()
