@@ -175,18 +175,6 @@ class Server:
         elif button == ButtonCode.NO.value:
             self.__send(OpCode.STAFF_ATTENDANCE)
 
-    def check_server_status(self):
-        try:
-            opcode = sock.recv(OPCODE, socket.MSG_DONTWAIT | socket.MSG_PEEK)
-            if len(opcode) == 0:
-                self.state = State.DISCONNECTED
-            elif int.from_bytes(opcode, sys.byteorder) == OpCode.DISCONNECT.value:
-                self.state = State.DISCONNECTED
-        except ConnectionResetError:
-            self.state = State.DISCONNECTED
-        except Exception as e:
-            print(e)
-
     def set_state(self, state):
         self.state = state
 
@@ -196,14 +184,21 @@ class Server:
         json_string = json.dumps(out_json)
         msg = json_string.encode(FORMAT)
         msg_length = len(msg)
-        self.server.send(opcode.value.to_bytes(length=OPCODE, byteorder=sys.byteorder, signed=False))
-        self.server.send(msg_length.to_bytes(length=HEADER, byteorder=sys.byteorder, signed=False))
-        self.server.send(msg)
+        try:
+            self.server.send(opcode.value.to_bytes(length=OPCODE, byteorder=sys.byteorder, signed=False))
+            self.server.send(msg_length.to_bytes(length=HEADER, byteorder=sys.byteorder, signed=False))
+            self.server.send(msg)
+        except Exception as e:
+            print(e)
+            self.state = State.DISCONNECTED
+
 
     def __receive(self):
         opcode = self.server.recv(OPCODE)
         if opcode:
             opcode = int.from_bytes(opcode, sys.byteorder)
+        if opcode == OpCode.DISCONNECT.value:
+            self.state = State.DISCONNECTED
         msg_length = self.server.recv(HEADER)
         if msg_length:
             msg_length = int.from_bytes(msg_length, sys.byteorder)
@@ -271,7 +266,6 @@ def main():
 
     # Matches state to show frame
     while server.state != State.DISCONNECTED:
-        server.check_server_status()
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
