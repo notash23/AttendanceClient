@@ -259,6 +259,9 @@ def main():
 
     # Matches state to show frame
     while server.state != State.DISCONNECTED:
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
+            break
         success, frame = cap.read()
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
