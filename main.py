@@ -175,6 +175,18 @@ class Server:
         elif button == ButtonCode.NO.value:
             self.__send(OpCode.STAFF_ATTENDANCE)
 
+    def check_server_status(self):
+        try:
+            opcode = sock.recv(OPCODE, socket.MSG_DONTWAIT | socket.MSG_PEEK)
+            if len(opcode) == 0:
+                self.state = State.DISCONNECTED
+            elif int.from_bytes(opcode, sys.byteorder) == OpCode.DISCONNECT.value:
+                self.state = State.DISCONNECTED
+        except ConnectionResetError:
+            self.state = State.DISCONNECTED
+        except Exception as e:
+            print(e)
+
     def set_state(self, state):
         self.state = state
 
@@ -259,6 +271,7 @@ def main():
 
     # Matches state to show frame
     while server.state != State.DISCONNECTED:
+        server.check_server_status()
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
