@@ -270,6 +270,7 @@ def main():
             cv2.destroyAllWindows()
             break
         success, frame = cap.read()
+        # Flips the camera image
         frame = cv2.flip(frame, flipCode=-1)
         if server.state == State.SCAN:
             if cap.isOpened():
