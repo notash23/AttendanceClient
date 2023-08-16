@@ -270,9 +270,7 @@ def main():
             cv2.destroyAllWindows()
             break
         success, frame = cap.read()
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            cv2.destroyAllWindows()
-            break
+        cv2.flip(frame, flipmode=-1)
         if server.state == State.SCAN:
             if cap.isOpened():
                 for barcode in bar.decode(frame):
