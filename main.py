@@ -130,6 +130,7 @@ class Server:
     def shutdown(self):
         self.__send(OpCode.DISCONNECT)
         self.state = State.SHUT_DOWN
+        self.server.close()
 
     def set_loading(self):
         self.state = State.LOADING
@@ -191,7 +192,6 @@ class Server:
         except Exception as e:
             print(e)
             self.state = State.DISCONNECTED
-
 
     def __receive(self):
         opcode = self.server.recv(OPCODE)
@@ -271,7 +271,7 @@ def main():
             break
         success, frame = cap.read()
         # Flips the camera image
-        frame = cv2.flip(frame, flipCode=-1)
+        # frame = cv2.flip(frame, flipCode=-1)
         if server.state == State.SCAN:
             if cap.isOpened():
                 for barcode in bar.decode(frame):
