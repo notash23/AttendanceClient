@@ -257,7 +257,7 @@ def main():
             dots = '.'
         else:
             dots += '.'
-        frame = cv2.putText(loading_frames[index], f"Connecting{dots}", (45, 125), font, 2, (255, 255, 255), 5,
+        frame = cv2.putText(loading_frames[index], f"Connecting{dots}", (45, 60), font, 2, (0, 0, 0), 5,
                             cv2.LINE_AA)
         cv2.imshow(CAMERA_VIEW, frame)
         cv2.waitKey(int(loading_fps))
