@@ -206,19 +206,19 @@ class Server:
 
 
 def main():
-    gif_cap = cv2.VideoCapture(r'resources/nyan-cat.mp4')
-    nyan_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
-    nyan_frames = []
+    gif_cap = cv2.VideoCapture(r'resources/loading.gif')
+    loading_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
+    loading_frames = []
 
     # Play the video once and store the frames in an array
     while gif_cap.isOpened():
         _ret, f = gif_cap.read()
         if f is None:
             break
-        nyan_frames.append(cv2.resize(f, (480, 320)))
+        loading_frames.append(cv2.resize(f, (480, 320)))
     gif_cap.release()
 
-    gif_cap = cv2.VideoCapture(r'resources/borat-nice.mp4')
+    gif_cap = cv2.VideoCapture(r'resources/success.gif')
     borat_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
     borat_frames = []
 
@@ -248,7 +248,7 @@ def main():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
-        if index == len(nyan_frames) - 1:
+        if index == len(loading_frames) - 1:
             index = 0
         else:
             index += 1
@@ -257,10 +257,10 @@ def main():
             dots = '.'
         else:
             dots += '.'
-        frame = cv2.putText(nyan_frames[index], f"Connecting{dots}", (45, 165), font, 2, (255, 255, 255), 5,
+        frame = cv2.putText(loading_frames[index], f"Connecting{dots}", (45, 125), font, 2, (255, 255, 255), 5,
                             cv2.LINE_AA)
         cv2.imshow(CAMERA_VIEW, frame)
-        cv2.waitKey(int(nyan_fps))
+        cv2.waitKey(int(loading_fps))
 
     cap = cv2.VideoCapture(0)
 
@@ -271,7 +271,7 @@ def main():
             break
         success, frame = cap.read()
         # Flips the camera image
-        # frame = cv2.flip(frame, flipCode=-1)
+        frame = cv2.flip(frame, flipCode=1)
         if server.state == State.SCAN:
             if cap.isOpened():
                 for barcode in bar.decode(frame):
