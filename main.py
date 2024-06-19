@@ -206,7 +206,7 @@ class Server:
 
 
 def main():
-    gif_cap = cv2.VideoCapture(r'resources/loading.gif')
+    gif_cap = cv2.VideoCapture(r'resources/nyan-cat.mp4')
     loading_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
     loading_frames = []
 
@@ -218,7 +218,7 @@ def main():
         loading_frames.append(cv2.resize(f, (480, 320)))
     gif_cap.release()
 
-    gif_cap = cv2.VideoCapture(r'resources/success.gif')
+    gif_cap = cv2.VideoCapture(r'resources/borat-nice.mp4')
     borat_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
     borat_frames = []
 
