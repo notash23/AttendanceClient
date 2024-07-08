@@ -7,7 +7,8 @@ import numpy as np
 import cv2
 import threading
 import pyzbar.pyzbar as bar
-import OPi.GPIO as GPIO
+
+# import OPi.GPIO as GPIO
 
 SERVER = "192.168.100.100"
 PORT = 5050
@@ -206,61 +207,58 @@ class Server:
 
 
 def main():
-    gif_cap = cv2.VideoCapture(r'resources/nyan-cat.mp4')
-    nyan_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
-    nyan_frames = []
+    gif_cap = cv2.VideoCapture(r'resources/loading.mp4')
+    loading_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
+    loading_frames = []
 
     # Play the video once and store the frames in an array
     while gif_cap.isOpened():
         _ret, f = gif_cap.read()
         if f is None:
             break
-        nyan_frames.append(cv2.resize(f, (480, 320)))
+        loading_frames.append(f)
     gif_cap.release()
 
-    gif_cap = cv2.VideoCapture(r'resources/borat-nice.mp4')
-    borat_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
-    borat_frames = []
+    gif_cap = cv2.VideoCapture(r'resources/success.mp4')
+    success_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
+    success_frames = []
 
     # Play the video once and store the frames in an array
     while gif_cap.isOpened():
         _ret, f = gif_cap.read()
         if f is None:
             break
-        borat_frames.append(cv2.resize(f, (480, 320)))
+        success_frames.append(f)
     gif_cap.release()
 
     cv2.namedWindow(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN)
-    cv2.setWindowProperty(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN,
-                          cv2.WINDOW_FULLSCREEN)
+    # cv2.setWindowProperty(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     server = Server()
-    GPIO.setmode(GPIO.SUNXI)
-    buttons = [ButtonCode.YES.value, ButtonCode.NO.value]
-    GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
-    GPIO.add_event_detect(buttons[0], trigger=GPIO.FALLING, callback=server.respond_staff_leave)
-    GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=server.respond_staff_leave)
+    # GPIO.setmode(GPIO.SUNXI)
+    # buttons = [ButtonCode.YES.value, ButtonCode.NO.value]
+    # GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
+    # GPIO.add_event_detect(buttons[0], trigger=GPIO.FALLING, callback=server.respond_staff_leave)
+    # GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=server.respond_staff_leave)
 
     # Makes a loading animation while waiting for connection
-    dots = '.'
     index = 0
     while server.state == State.DISCONNECTED:
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
-            break
-        if index == len(nyan_frames) - 1:
+            cv2.destroyAllWindows()
+            server.shutdown()
+            exit()
+
+        if index == len(loading_frames) - 1:
             index = 0
         else:
             index += 1
 
-        if len(dots) > 3:
-            dots = '.'
-        else:
-            dots += '.'
-        frame = cv2.putText(nyan_frames[index], f"Connecting{dots}", (45, 165), font, 2, (255, 255, 255), 5,
+        frame = cv2.putText(loading_frames[index], "Connecting...", (118, 30), font, 1.2, (0, 0, 0), 3,
                             cv2.LINE_AA)
         cv2.imshow(CAMERA_VIEW, frame)
-        cv2.waitKey(int(nyan_fps))
+        cv2.waitKey(int(loading_fps))
 
     cap = cv2.VideoCapture(0)
 
@@ -288,11 +286,11 @@ def main():
             cv2.putText(frame, "Loading", (120, 160), font, 2, (0, 0, 0), 2, cv2.LINE_AA)
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.SUCCESS:
-            for frame in borat_frames:
+            for frame in success_frames:
                 cv2.putText(frame, server.response["Name"][0], (int(240 - server.response["Name"][1][0] / 2), 100),
                             font, 1, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.imshow(CAMERA_VIEW, frame)
-                cv2.waitKey(int(borat_fps))
+                cv2.waitKey(int(success_fps))
             server.set_state(State.SCAN)
         elif server.state == State.STAFF_SELECT:
             threading.Thread(target=server.respond_staff_leave).start()
@@ -319,11 +317,8 @@ def main():
             success, frame = cap.read()
             cv2.imshow(CAMERA_VIEW, frame)
         cv2.waitKey(1)
-        if cv2.getWindowProperty(CAMERA_VIEW, cv2.WND_PROP_VISIBLE) < 1:
-            break
     cap.release()
-    GPIO.cleanup(buttons)
-    cv2.destroyAllWindows()
+    # GPIO.cleanup(buttons)
     server.shutdown()
 
 
