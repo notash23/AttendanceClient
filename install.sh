@@ -18,12 +18,12 @@ pip install numpy pyzbar OPi.GPIO
 echo "[Desktop Entry]
 Encoding=UTF-8
 Type=Application
-Name=<Attendance Client>
+Name=Attendance Client
 Comment=
 Exec=python3 $(pwd)/main.py
 StartupNotify=false
 Terminal=true
-Hidden=false" >/home/orangepi/.config/autostart/AttendanceClient.desktop
+Hidden=false" >/home/orangepi/.config/autostart/AttendanceClient.desktop # or /etc/xdg/autostart/AttendanceClient.desktop
 
 # Restart the device
-sudo reboot
+#sudo reboot
