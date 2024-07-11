@@ -20,6 +20,8 @@ FORMAT = 'utf-8'
 CAMERA_VIEW = 'CameraView'
 font = cv2.FONT_HERSHEY_SIMPLEX
 
+absolute_path = os.path.dirname(__file__)
+
 
 def decrypt(in_string):
     value_set = in_string.split("!")
@@ -73,8 +75,6 @@ def center_text_with_ellipsis(in_string):
 
 
 def load_animation_frame():
-    absolute_path = os.path.dirname(__file__)
-
     gif_cap = cv2.VideoCapture(os.path.join(absolute_path, 'resources/loading.mp4'))
     loading_fps = int(1000 / gif_cap.get(cv2.CAP_PROP_FPS))
     loading_frames = []
@@ -142,7 +142,7 @@ class Server:
             time.sleep(5)
         print("We have connected!")
         self.server.settimeout(None)
-        with open(r'resources/authData.json', 'r') as f:
+        with open(os.path.join(absolute_path, 'resources/authData.json'), 'r') as f:
             self.__send(OpCode.CONNECT, json.loads(f.read()))
             f.close()
         response = self.__receive()
