@@ -67,9 +67,36 @@ def center_text_with_ellipsis(in_string):
     i = 20
     while cv2.getTextSize(in_string[:i], font, 1, 2)[0][0] < 460:
         i += 1
-    print(in_string[:i])
     out_string = in_string[:i - 3] + "..."
     return out_string, cv2.getTextSize(out_string, font, 1, 2)[0]
+
+
+def load_animation_frame():
+    gif_cap = cv2.VideoCapture(r'resources/loading.mp4')
+    loading_fps = int(1000 / gif_cap.get(cv2.CAP_PROP_FPS))
+    loading_frames = []
+
+    # Play the video once and store the frames in an array
+    while gif_cap.isOpened():
+        _ret, f = gif_cap.read()
+        if f is None:
+            break
+        loading_frames.append(f)
+    gif_cap.release()
+
+    gif_cap = cv2.VideoCapture(r'resources/success.mp4')
+    success_fps = int(1000 / gif_cap.get(cv2.CAP_PROP_FPS))
+    success_frames = []
+
+    # Play the video once and store the frames in an array
+    while gif_cap.isOpened():
+        _ret, f = gif_cap.read()
+        if f is None:
+            break
+        success_frames.append(f)
+    gif_cap.release()
+
+    return loading_frames, loading_fps, success_frames, success_fps
 
 
 class State(Enum):
@@ -157,7 +184,6 @@ class Server:
             self.state = State.STAFF_SELECT
 
     def respond_staff_leave(self, button):
-        print(button)
         if self.state != State.STAFF_SELECT:
             return
         self.state = State.LOADING
@@ -207,34 +233,11 @@ class Server:
 
 
 def main():
-    gif_cap = cv2.VideoCapture(r'resources/loading.mp4')
-    loading_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
-    loading_frames = []
-
-    # Play the video once and store the frames in an array
-    while gif_cap.isOpened():
-        _ret, f = gif_cap.read()
-        if f is None:
-            break
-        loading_frames.append(f)
-    gif_cap.release()
-
-    gif_cap = cv2.VideoCapture(r'resources/success.mp4')
-    success_fps = 1000 / gif_cap.get(cv2.CAP_PROP_FPS)
-    success_frames = []
-
-    # Play the video once and store the frames in an array
-    while gif_cap.isOpened():
-        _ret, f = gif_cap.read()
-        if f is None:
-            break
-        success_frames.append(f)
-    gif_cap.release()
-
-    cv2.namedWindow(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN)
-    # cv2.setWindowProperty(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-
     server = Server()
+    loading_frames, loading_fps, success_frames, success_fps = load_animation_frame()
+    cv2.namedWindow(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN)
+    cv2.setWindowProperty(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
     # GPIO.setmode(GPIO.SUNXI)
     # buttons = [ButtonCode.YES.value, ButtonCode.NO.value]
     # GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
@@ -242,23 +245,10 @@ def main():
     # GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=server.respond_staff_leave)
 
     # Makes a loading animation while waiting for connection
-    index = 0
     while server.state == State.DISCONNECTED:
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            cv2.destroyAllWindows()
-            cv2.destroyAllWindows()
-            server.shutdown()
-            exit()
-
-        if index == len(loading_frames) - 1:
-            index = 0
-        else:
-            index += 1
-
-        frame = cv2.putText(loading_frames[index], "Connecting...", (118, 30), font, 1.2, (0, 0, 0), 3,
-                            cv2.LINE_AA)
-        cv2.imshow(CAMERA_VIEW, frame)
-        cv2.waitKey(int(loading_fps))
+        for frame in loading_frames:
+            cv2.imshow(CAMERA_VIEW, frame)
+            cv2.waitKey(loading_fps)
 
     cap = cv2.VideoCapture(0)
 
@@ -268,27 +258,24 @@ def main():
             cv2.destroyAllWindows()
             break
         success, frame = cap.read()
+
         # Flips the camera image
         # frame = cv2.flip(frame, flipCode=-1)
         if server.state == State.SCAN:
-            if cap.isOpened():
-                for barcode in bar.decode(frame):
-                    my_data = barcode.data.decode('utf-8')
-                    try:
-                        if my_data is not None:
-                            server.set_loading()
-                            threading.Thread(target=server.send_attendance, args=(my_data,)).start()
-                    except KeyboardInterrupt:
-                        server.state = State.ERROR
-                cv2.imshow(CAMERA_VIEW, frame)
+            for barcode in bar.decode(frame):
+                my_data = barcode.data.decode('utf-8')
+                if my_data is not None:
+                    server.set_loading()
+                    threading.Thread(target=server.send_attendance, args=(my_data,)).start()
+            cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.LOADING:
             frame = np.full([320, 480, 3], (255, 255, 255), dtype=np.uint8)
             cv2.putText(frame, "Loading", (120, 160), font, 2, (0, 0, 0), 2, cv2.LINE_AA)
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.SUCCESS:
             for frame in success_frames:
-                cv2.putText(frame, server.response["Name"][0], (int(240 - server.response["Name"][1][0] / 2), 100),
-                            font, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(frame, server.response["Name"][0], (int(240 - server.response["Name"][1][0] / 2), 280),
+                            font, 1.5, (80, 80, 80), 3, cv2.LINE_AA)
                 cv2.imshow(CAMERA_VIEW, frame)
                 cv2.waitKey(int(success_fps))
             server.set_state(State.SCAN)
@@ -314,7 +301,6 @@ def main():
                 height += error_line[1][1] + 15
             cv2.imshow(CAMERA_VIEW, frame)
         else:
-            success, frame = cap.read()
             cv2.imshow(CAMERA_VIEW, frame)
         cv2.waitKey(1)
     cap.release()
