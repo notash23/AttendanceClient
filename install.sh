@@ -4,7 +4,6 @@
 KERNEL_VERSION=$(hostnamectl | grep 'Kernel:' | sed 's/^.*: //' | awk -F- '{print$1}' | awk -F. 'OFS="." {print$1,$2}')
 if [[ $KERNEL_VERSION = "Linux 4.9" ]]; then
   echo 'Linux Version Error: Should be using kernel version 4.9'
-  exit
 fi
 
 # LCD screen setup
@@ -31,7 +30,7 @@ deb-src http://security.debian.org/debian-security/ buster/updates main contrib 
 
 # Python library installations
 sudo apt update
-sudo apt install -y python3-pip libopencv-dev python3-opencv
+sudo apt install -y python3-pip libopencv-dev python3-opencv libzbar0
 pip install numpy pyzbar OPi.GPIO
 
 # Start app up on boot
@@ -48,4 +47,4 @@ Hidden=false" >/home/orangepi/.config/autostart/AttendanceClient.desktop # or /e
 # TODO use zenity to create dialog box to input in bash file
 
 # Restart the device
-sudo reboot
+sudo shutdown now

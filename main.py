@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 import threading
 import pyzbar.pyzbar as bar
+import os
 
 # import OPi.GPIO as GPIO
 
@@ -72,7 +73,9 @@ def center_text_with_ellipsis(in_string):
 
 
 def load_animation_frame():
-    gif_cap = cv2.VideoCapture(r'resources/loading.mp4')
+    absolute_path = os.path.dirname(__file__)
+
+    gif_cap = cv2.VideoCapture(os.path.join(absolute_path, 'resources/loading.mp4'))
     loading_fps = int(1000 / gif_cap.get(cv2.CAP_PROP_FPS))
     loading_frames = []
 
@@ -84,7 +87,7 @@ def load_animation_frame():
         loading_frames.append(f)
     gif_cap.release()
 
-    gif_cap = cv2.VideoCapture(r'resources/success.mp4')
+    gif_cap = cv2.VideoCapture(os.path.join(absolute_path, 'resources/success.mp4'))
     success_fps = int(1000 / gif_cap.get(cv2.CAP_PROP_FPS))
     success_frames = []
 
