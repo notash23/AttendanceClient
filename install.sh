@@ -33,7 +33,7 @@ deb-src http://security.debian.org/debian-security/ buster/updates main contrib 
 # Python library installations
 apt update
 apt install -y python3-pip libopencv-dev python3-opencv libzbar0
-pip3 install numpy pyzbar OPi.GPIO
+pip3 install numpy pyzbar
 
 # Start app up on boot
 echo "[Desktop Entry]

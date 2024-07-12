@@ -11,7 +11,7 @@ cp /etc/apt/sources.list.bak /etc/apt/sources.list
 
 # Uninstall libraries
 apt purge -y python3-pip libopencv-dev python3-opencv libzbar0
-pip3 uninstall numpy pyzbar OPi.GPIO
+pip3 uninstall numpy pyzbar
 
 # Remove autostart files
 rm /home/orangepi/.config/autostart/AttendanceClient.desktop

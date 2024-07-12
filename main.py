@@ -9,8 +9,6 @@ import threading
 import pyzbar.pyzbar as bar
 import os
 
-# import OPi.GPIO as GPIO
-
 SERVER = "192.168.100.100"
 PORT = 5050
 ADDR = (SERVER, PORT)
@@ -109,21 +107,14 @@ class State(Enum):
     SUCCESS = 2
     ERROR = 3
     LOADING = 4
-    STAFF_SELECT = 5
 
 
 class OpCode(Enum):
     CONNECT = 0
     ATTENDANCE = 1
-    STAFF_ATTENDANCE = 2
-    SUCCESSFUL = 3
-    UNSUCCESSFUL = 4
-    DISCONNECT = 5
-
-
-class ButtonCode(Enum):
-    YES = "PC8"
-    NO = "PC11"
+    SUCCESSFUL = 2
+    UNSUCCESSFUL = 3
+    DISCONNECT = 4
 
 
 class Server:
@@ -179,32 +170,6 @@ class Server:
             self.state = State.ERROR
             time.sleep(2)
             self.state = State.SCAN
-        elif response[0] == OpCode.STAFF_ATTENDANCE.value:
-            formatted_dict = {}
-            for key, value in response[1].items():
-                formatted_dict[key] = center_text_with_ellipsis(value)
-            self.response = formatted_dict
-            self.state = State.STAFF_SELECT
-
-    def respond_staff_leave(self, button):
-        if self.state != State.STAFF_SELECT:
-            return
-        self.state = State.LOADING
-        if button == ButtonCode.YES.value:
-            self.__send(OpCode.STAFF_ATTENDANCE, {"setLeave": "yes"})
-            response = self.__receive()
-            if not response:
-                return
-            if response[0] == OpCode.SUCCESSFUL.value:
-                self.response = response[1]
-                self.state = State.SUCCESS
-            elif response[0] == OpCode.UNSUCCESSFUL.value:
-                self.response = make_paragraph(response[1]["error"])
-                self.state = State.ERROR
-                time.sleep(2)
-                self.state = State.SCAN
-        elif button == ButtonCode.NO.value:
-            self.__send(OpCode.STAFF_ATTENDANCE)
 
     def set_state(self, state):
         self.state = state
@@ -241,12 +206,6 @@ def main():
     cv2.namedWindow(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty(CAMERA_VIEW, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    # GPIO.setmode(GPIO.SUNXI)
-    # buttons = [ButtonCode.YES.value, ButtonCode.NO.value]
-    # GPIO.setup(buttons, GPIO.IN, GPIO.HIGH)
-    # GPIO.add_event_detect(buttons[0], trigger=GPIO.FALLING, callback=server.respond_staff_leave)
-    # GPIO.add_event_detect(buttons[1], trigger=GPIO.FALLING, callback=server.respond_staff_leave)
-
     # Makes a loading animation while waiting for connection
     while server.state == State.DISCONNECTED:
         for frame in loading_frames:
@@ -282,19 +241,6 @@ def main():
                 cv2.imshow(CAMERA_VIEW, frame)
                 cv2.waitKey(int(success_fps))
             server.set_state(State.SCAN)
-        elif server.state == State.STAFF_SELECT:
-            threading.Thread(target=server.respond_staff_leave).start()
-            frame = np.full([320, 480, 3], (255, 255, 255), dtype=np.uint8)
-            cv2.putText(frame, "Are you leaving?", (104, 40), font, 1, (0, 0, 0), 2, cv2.LINE_AA)
-            cv2.putText(frame, server.response["SIC"][0], (int(240 - server.response["SIC"][1][0] / 2),
-                                                           int(100 + server.response["SIC"][1][1] / 2)), font, 1,
-                        (0, 0, 0), 1, cv2.LINE_AA)
-            cv2.putText(frame, server.response["Name"][0],
-                        (int(240 - server.response["Name"][1][0] / 2), int(170 + server.response["Name"][1][1] / 2)),
-                        font, 1, (0, 0, 0))
-            cv2.putText(frame, server.response["Department"][0],
-                        (int(240 - server.response["Department"][1][0] / 2), 275), font, 1, (0, 0, 0))
-            cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.ERROR:
             frame = np.full([400, 400, 3], 1, dtype=np.uint8)
             height = int(160 - server.response[1] / 2)
@@ -307,7 +253,6 @@ def main():
             cv2.imshow(CAMERA_VIEW, frame)
         cv2.waitKey(1)
     cap.release()
-    # GPIO.cleanup(buttons)
     server.shutdown()
 
 
