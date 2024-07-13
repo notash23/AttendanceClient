@@ -8,7 +8,7 @@ This is the client app for the MauSchool project
 
 ## Demo
 
-The app will scan the Attendance App's QR code and record the attendnace on the Admin app
+The app will scan the Attendance App's QR code and record the attendance on the Admin app
 ![Demo](public/demo.gif)
 
 ## Deployment
