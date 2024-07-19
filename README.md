@@ -8,7 +8,7 @@ This is the client app for the MauSchool project
 
 ## Demo
 
-The app will scan the Attendance App's QR code and record the attendnace on the Admin app
+The app will scan the Attendance App's QR code and record the attendance on the Admin app
 ![Demo](public/demo.gif)
 
 ## Deployment
@@ -26,7 +26,7 @@ cd AttendanceClient
 Next, run the install.sh bash script to set up the appropriate files. Mind that this step will restart your device.
 
 ```bash
-sudo ./install.sh
+sudo bash install.sh
 ```
 
 Once the device has restarted, the code will run automatically on boot.
@@ -35,7 +35,7 @@ Once the device has restarted, the code will run automatically on boot.
 All of the libraries installed and the setup can be cleaned by running the uninstall.sh bash script.
 
 ```bash
-sudo ./uninstall.sh
+sudo bash uninstall.sh
 ```
 ## Tech Stack
 
