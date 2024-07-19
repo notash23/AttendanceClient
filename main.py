@@ -221,8 +221,10 @@ def main():
             break
         success, frame = cap.read()
 
-        # Flips the camera image
-        # frame = cv2.flip(frame, flipCode=-1)
+        # Flips and resize the camera image
+        frame = cv2.flip(frame, flipCode=-1)
+        frame = cv2.resize(frame, (480, 320))
+
         if server.state == State.SCAN:
             for barcode in bar.decode(frame):
                 my_data = barcode.data.decode('utf-8')
