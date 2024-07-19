@@ -46,6 +46,10 @@ StartupNotify=false
 Terminal=true
 Hidden=false" >/home/orangepi/.config/autostart/AttendanceClient.desktop # or /etc/xdg/autostart/AttendanceClient.desktop
 
+# Hide mouse cursor
+cp /etc/lightdm/lightdm.conf.d/11-orangepi.conf /etc/lightdm/lightdm.conf.d/11-orangepi.conf.bak
+echo "xserver-command=X -bs -core -nocursor" >>/etc/lightdm/lightdm.conf.d/11-orangepi.conf
+
 # Create dialog box to input authentication details
 OUTPUT=$(zenity --forms --title="Authentication Data" --text="Enter Auth Details for the Attendance Client" --separator="|" --add-entry="ID" --add-entry="Auth Token")
 
