@@ -221,7 +221,7 @@ def main():
             break
         success, frame = cap.read()
 
-        # Flips and resize the camera image
+        # Flip and resize the camera image
         frame = cv2.flip(frame, flipCode=-1)
         frame = cv2.resize(frame, (480, 320))
 

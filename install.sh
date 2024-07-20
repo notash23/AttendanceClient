@@ -17,7 +17,7 @@ echo "Section \"Device\"
 EndSection" >/usr/share/X11/xorg.conf.d/99-fbdev.conf
 
 # Change apt sources
-cp /etc/apt/sources.list /etc/apt/sources.list.bak
+mv /etc/apt/sources.list /etc/apt/sources.list.bak
 echo "deb http://deb.debian.org/debian buster main contrib non-free
 deb-src http://deb.debian.org/debian buster main contrib non-free
 
@@ -49,6 +49,9 @@ Hidden=false" >/home/orangepi/.config/autostart/AttendanceClient.desktop # or /e
 # Hide mouse cursor
 cp /etc/lightdm/lightdm.conf.d/11-orangepi.conf /etc/lightdm/lightdm.conf.d/11-orangepi.conf.bak
 echo "xserver-command=X -bs -core -nocursor" >>/etc/lightdm/lightdm.conf.d/11-orangepi.conf
+
+# Disable notification
+mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disabled
 
 # Create dialog box to input authentication details
 OUTPUT=$(zenity --forms --title="Authentication Data" --text="Enter Auth Details for the Attendance Client" --separator="|" --add-entry="ID" --add-entry="Auth Token")
