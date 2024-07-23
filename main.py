@@ -222,7 +222,7 @@ def main():
         success, frame = cap.read()
 
         # Flip and resize the camera image
-        frame = cv2.flip(frame, flipCode=-1)
+        frame = cv2.flip(frame, flipCode=1)
         frame = cv2.resize(frame, (480, 320))
 
         if server.state == State.SCAN:
