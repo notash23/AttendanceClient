@@ -155,12 +155,14 @@ class Server:
             f.close()
         response = self.__receive()
         if not response:
-            self.server.close()
+            self.state = State.ERROR
+            self.response = make_paragraph("Bad response")
+            time.sleep(2)
+            self.state = State.DISCONNECTED
             return
         if response[0] == OpCode.DISCONNECT.value:
             self.state = State.ERROR
             self.response = make_paragraph(response[1]["error"])
-            self.server.close()
             time.sleep(2)
             self.state = State.DISCONNECTED
             return
@@ -192,7 +194,6 @@ class Server:
         except Exception as e:
             self.state = State.ERROR
             self.response = make_paragraph(str(e))
-            self.server.close()
             time.sleep(2)
             self.state = State.DISCONNECTED
 
@@ -218,7 +219,9 @@ def main():
             cv2.imshow(CAMERA_VIEW, frame)
             cv2.waitKey(loading_fps)
 
-    server.check_alive()
+    if server.state == State.SCAN:
+        server.check_alive()
+
     cap = cv2.VideoCapture(0)
 
     # Matches state to show frame
