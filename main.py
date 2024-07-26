@@ -172,6 +172,7 @@ class Server:
     def __check_connection(self):
         while True:
             s = socket.socket()
+            s.settimeout(1.0)
             try:
                 s.connect(ADDR)
             except Exception:
