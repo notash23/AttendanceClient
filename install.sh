@@ -66,4 +66,4 @@ awk -F"|" '{ OFS="" } { print "{\n  \"id\": \"", $1, "\",\n  \"authToken\": \"",
 
 # Restart the device
 usermod -aG sudo orangepi
-poweroff
+shutdown now

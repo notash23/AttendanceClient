@@ -26,4 +26,4 @@ rm "$PWD"/resources/authData.json
 
 # Restart the device
 usermod -rG sudo orangepi
-poweroff
+shutdown now

@@ -33,7 +33,7 @@ def decrypt(in_string):
 
 
 def make_paragraph(in_string: str):
-    string_dimensions = cv2.getTextSize(in_string, font, 1, 1)
+    string_dimensions = cv2.getTextSize(in_string, font, 1, 2)
     if string_dimensions[0][0] < 460:
         return [(in_string, string_dimensions[0])], string_dimensions[0][1]
     words = in_string.split()
@@ -41,18 +41,18 @@ def make_paragraph(in_string: str):
     current_line = ""
     height = 0
     for word in words:
-        current_line_dimension = cv2.getTextSize(current_line + word + " ", font, 1, 1)
+        current_line_dimension = cv2.getTextSize(current_line + word + " ", font, 1, 2)
         if current_line_dimension[0][0] < 460:
             current_line += word + " "
         else:
-            string_dimensions = cv2.getTextSize(current_line[:-1], font, 1, 1)
+            string_dimensions = cv2.getTextSize(current_line[:-1], font, 1, 2)
             lines.append((current_line[:-1], string_dimensions[0]))
             height += string_dimensions[0][1] + 15
             current_line = word + " "
             if height > 300:
                 lines[-2] = lines[-2][0][:-4] + "...", lines[-2][1]
                 return lines[:-1], height
-    string_dimensions = cv2.getTextSize(current_line[:-1], font, 1, 1)
+    string_dimensions = cv2.getTextSize(current_line[:-1], font, 1, 2)
     lines.append((current_line[:-1], string_dimensions[0]))
     height += string_dimensions[0][1] + 15
     if height > 300:
@@ -157,13 +157,13 @@ class Server:
         if not response:
             self.state = State.ERROR
             self.response = make_paragraph("Bad response")
-            time.sleep(2)
+            time.sleep(5)
             self.state = State.DISCONNECTED
             return
         if response[0] == OpCode.DISCONNECT.value:
             self.state = State.ERROR
             self.response = make_paragraph(response[1]["error"])
-            time.sleep(2)
+            time.sleep(5)
             self.state = State.DISCONNECTED
             return
         if response[0] == OpCode.SUCCESSFUL.value:
@@ -194,7 +194,7 @@ class Server:
         except Exception as e:
             self.state = State.ERROR
             self.response = make_paragraph(str(e))
-            time.sleep(2)
+            time.sleep(5)
             self.state = State.DISCONNECTED
 
     def __receive(self):
@@ -221,15 +221,14 @@ def main():
 
     if server.state == State.SCAN:
         server.check_alive()
-
-    cap = cv2.VideoCapture(0)
+    # cap = cv2.VideoCapture(0)
 
     # Matches state to show frame
     while server.state != State.DISCONNECTED:
-        success, frame = cap.read()
+        # success, frame = cap.read()
 
         # Flip and resize the camera image
-        frame = cv2.flip(frame, flipCode=1)
+        frame = cv2.flip(np.full([320, 480, 3], (0, 0, 0), dtype=np.uint8), flipCode=1)
         frame = cv2.resize(frame, (480, 320))
 
         if server.state == State.SCAN:
@@ -261,9 +260,9 @@ def main():
         else:
             cv2.imshow(CAMERA_VIEW, frame)
         cv2.waitKey(1)
-    cap.release()
+    # cap.release()
     server.server.close()
-    os.system('poweroff')
+    os.system('shutdown now')
 
 
 if __name__ == "__main__":
