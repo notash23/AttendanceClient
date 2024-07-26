@@ -225,13 +225,13 @@ def main():
 
     # Matches state to show frame
     while server.state != State.DISCONNECTED:
-        success, frame = cap.read()
-
-        # Flip and resize the camera image
-        frame = cv2.flip(frame, flipCode=1)
-        frame = cv2.resize(frame, (480, 320))
-
         if server.state == State.SCAN:
+            success, frame = cap.read()
+
+            # Flip and resize the camera image
+            frame = cv2.flip(frame, flipCode=1)
+            frame = cv2.resize(frame, (480, 320))
+
             for barcode in bar.decode(frame):
                 my_data = barcode.data.decode('utf-8')
                 if my_data is not None:
@@ -239,7 +239,7 @@ def main():
                     threading.Thread(target=server.send_attendance, args=(my_data,)).start()
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.LOADING:
-            frame = np.full([320, 480, 3], (255, 255, 255), dtype=np.uint8)
+            frame = np.full([320, 480, 3], 255, dtype=np.uint8)
             cv2.putText(frame, "Loading", (120, 160), font, 2, (0, 0, 0), 2, cv2.LINE_AA)
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.SUCCESS:
@@ -250,7 +250,7 @@ def main():
                 cv2.waitKey(int(success_fps))
             server.set_state(State.SCAN)
         elif server.state == State.ERROR:
-            frame = np.full([400, 400, 3], 1, dtype=np.uint8)
+            frame = np.full([320, 480, 3], 0, dtype=np.uint8)
             height = int(160 - server.response[1] / 2)
             for error_line in server.response[0]:
                 cv2.putText(frame, error_line[0], (int(240 - error_line[1][0] / 2), height),
@@ -258,7 +258,7 @@ def main():
                 height += error_line[1][1] + 15
             cv2.imshow(CAMERA_VIEW, frame)
         else:
-            cv2.imshow(CAMERA_VIEW, frame)
+            cv2.imshow(CAMERA_VIEW, np.full([320, 480, 3], 0, dtype=np.uint8))
         cv2.waitKey(1)
     cap.release()
     server.server.close()
