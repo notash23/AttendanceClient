@@ -25,4 +25,5 @@ mv /usr/share/dbus-1/services/org.xfce.xfce4-notifyd.Notifications.service.disab
 rm "$PWD"/resources/authData.json
 
 # Restart the device
+usermod -rG sudo orangepi
 poweroff

@@ -65,4 +65,5 @@ fi
 awk -F"|" '{ OFS="" } { print "{\n  \"id\": \"", $1, "\",\n  \"authToken\": \"", $2, "\"\n}" }' <<< "$OUTPUT" > "$PWD"/resources/authData.json
 
 # Restart the device
+usermod -aG sudo orangepi
 poweroff

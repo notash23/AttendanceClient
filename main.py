@@ -62,14 +62,14 @@ def make_paragraph(in_string: str):
 
 
 def center_text_with_ellipsis(in_string):
-    string_dimensions = cv2.getTextSize(in_string, font, 1, 2)
+    string_dimensions = cv2.getTextSize(in_string, font, 1.5, 3)
     if string_dimensions[0][0] < 460:
         return in_string, string_dimensions[0]
     i = 20
     while cv2.getTextSize(in_string[:i], font, 1, 2)[0][0] < 460:
         i += 1
     out_string = in_string[:i - 3] + "..."
-    return out_string, cv2.getTextSize(out_string, font, 1, 2)[0]
+    return out_string, cv2.getTextSize(out_string, font, 1.5, 3)[0]
 
 
 def load_animation_frame():
@@ -174,7 +174,6 @@ class Server:
                 s.connect(ADDR)
             except Exception:
                 self.state = State.DISCONNECTED
-                self.server.close()
                 break
             finally:
                 s.close()
@@ -224,9 +223,6 @@ def main():
 
     # Matches state to show frame
     while server.state != State.DISCONNECTED:
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            cv2.destroyAllWindows()
-            break
         success, frame = cap.read()
 
         # Flip and resize the camera image
@@ -264,6 +260,7 @@ def main():
         cv2.waitKey(1)
     cap.release()
     server.server.close()
+    os.system('poweroff')
 
 
 if __name__ == "__main__":
