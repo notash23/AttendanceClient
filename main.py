@@ -221,14 +221,14 @@ def main():
 
     if server.state == State.SCAN:
         server.check_alive()
-    # cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0)
 
     # Matches state to show frame
     while server.state != State.DISCONNECTED:
-        # success, frame = cap.read()
+        success, frame = cap.read()
 
         # Flip and resize the camera image
-        frame = cv2.flip(np.full([320, 480, 3], (0, 0, 0), dtype=np.uint8), flipCode=1)
+        frame = cv2.flip(frame, flipCode=1)
         frame = cv2.resize(frame, (480, 320))
 
         if server.state == State.SCAN:
@@ -260,7 +260,7 @@ def main():
         else:
             cv2.imshow(CAMERA_VIEW, frame)
         cv2.waitKey(1)
-    # cap.release()
+    cap.release()
     server.server.close()
     os.system('shutdown now')
 
