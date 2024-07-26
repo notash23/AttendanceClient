@@ -101,7 +101,6 @@ def load_animation_frame():
 
 
 class State(Enum):
-    SHUT_DOWN = -1
     DISCONNECTED = 0
     SCAN = 1
     SUCCESS = 2
@@ -122,40 +121,7 @@ class Server:
         self.state = State.DISCONNECTED
         self.response = None
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        threading.Thread(target=self.await_connection).start()
-
-    def await_connection(self):
-        self.server.settimeout(5)
-        while self.server.connect_ex(ADDR) != 0:
-            if self.state == State.SHUT_DOWN:
-                return
-            print("Trying to connect to server...")
-            time.sleep(5)
-        print("We have connected!")
-        self.server.settimeout(None)
-        with open(os.path.join(absolute_path, 'resources/authData.json'), 'r') as f:
-            self.__send(OpCode.CONNECT, json.loads(f.read()))
-            f.close()
-        response = self.__receive()
-        if not response:
-            return
-        if response[0] == OpCode.DISCONNECT.value:
-            self.state = State.ERROR
-            self.response = make_paragraph(response[1]["error"])
-            self.server.close()
-            time.sleep(2)
-            self.state = State.DISCONNECTED
-            return
-        if response[0] == OpCode.SUCCESSFUL.value:
-            self.state = State.SCAN
-
-    def shutdown(self):
-        self.__send(OpCode.DISCONNECT)
-        self.state = State.SHUT_DOWN
-        self.server.close()
-
-    def set_loading(self):
-        self.state = State.LOADING
+        threading.Thread(target=self.__await_connection).start()
 
     def send_attendance(self, msg):
         self.__send(OpCode.ATTENDANCE, {"attendanceString": msg})
@@ -171,8 +137,48 @@ class Server:
             time.sleep(2)
             self.state = State.SCAN
 
+    def check_alive(self):
+        threading.Thread(target=self.__check_connection).start()
+
     def set_state(self, state):
         self.state = state
+
+    def __await_connection(self):
+        self.server.settimeout(5)
+        while self.server.connect_ex(ADDR) != 0:
+            print("Trying to connect to server...")
+            time.sleep(5)
+        print("We have connected!")
+        self.server.settimeout(None)
+        with open(os.path.join(absolute_path, 'resources/authData.json'), 'r') as f:
+            self.__send(OpCode.CONNECT, json.loads(f.read()))
+            f.close()
+        response = self.__receive()
+        if not response:
+            self.server.close()
+            return
+        if response[0] == OpCode.DISCONNECT.value:
+            self.state = State.ERROR
+            self.response = make_paragraph(response[1]["error"])
+            self.server.close()
+            time.sleep(2)
+            self.state = State.DISCONNECTED
+            return
+        if response[0] == OpCode.SUCCESSFUL.value:
+            self.state = State.SCAN
+
+    def __check_connection(self):
+        while True:
+            s = socket.socket()
+            try:
+                s.connect(ADDR)
+            except Exception:
+                self.state = State.DISCONNECTED
+                self.server.close()
+                break
+            finally:
+                s.close()
+            time.sleep(15)
 
     def __send(self, opcode, out_json=None):
         if out_json is None:
@@ -185,15 +191,16 @@ class Server:
             self.server.send(msg_length.to_bytes(length=HEADER, byteorder=sys.byteorder, signed=False))
             self.server.send(msg)
         except Exception as e:
-            print(e)
+            self.state = State.ERROR
+            self.response = make_paragraph(str(e))
+            self.server.close()
+            time.sleep(2)
             self.state = State.DISCONNECTED
 
     def __receive(self):
         opcode = self.server.recv(OPCODE)
         if opcode:
             opcode = int.from_bytes(opcode, sys.byteorder)
-        if opcode == OpCode.DISCONNECT.value:
-            self.state = State.DISCONNECTED
         msg_length = self.server.recv(HEADER)
         if msg_length:
             msg_length = int.from_bytes(msg_length, sys.byteorder)
@@ -212,6 +219,7 @@ def main():
             cv2.imshow(CAMERA_VIEW, frame)
             cv2.waitKey(loading_fps)
 
+    server.check_alive()
     cap = cv2.VideoCapture(0)
 
     # Matches state to show frame
@@ -229,7 +237,7 @@ def main():
             for barcode in bar.decode(frame):
                 my_data = barcode.data.decode('utf-8')
                 if my_data is not None:
-                    server.set_loading()
+                    server.set_state(State.LOADING)
                     threading.Thread(target=server.send_attendance, args=(my_data,)).start()
             cv2.imshow(CAMERA_VIEW, frame)
         elif server.state == State.LOADING:
@@ -255,7 +263,7 @@ def main():
             cv2.imshow(CAMERA_VIEW, frame)
         cv2.waitKey(1)
     cap.release()
-    server.shutdown()
+    server.server.close()
 
 
 if __name__ == "__main__":
