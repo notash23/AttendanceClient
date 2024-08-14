@@ -1,0 +1,58 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "allwinner,sun50i-h616";
+
+	fragment@0 {
+		target = <&spi1>;
+		__overlay__ {
+			status = "okay";
+
+			spidev@0{
+				status = "disabled";
+			};
+
+			spidev@1{
+				status = "disabled";
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&pio>;
+		__overlay__ {
+			opiz_display_pins: opiz_display_pins {
+                pins = "PC9\0PC6\0PC5";
+                function = <1 1 1>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&spi1>;
+		__overlay__ {
+			/* needed to avoid dtc warning */
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			opizdisplay: opiz-display@0{
+				compatible = "ilitek,ili9488";
+				reg = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&opiz_display_pins>;
+
+				spi-max-frequency = <65000000>;
+				txbuflen = <65536>;
+				rotate = <90>;
+				bgr;
+				fps = <60>;
+				buswidth = <8>;
+				reset-gpios = <&pio 0 73 0>;
+				dc-gpios = <&pio 0 70 0>;
+                led-gpios = <&pio 0 69 1>;
+				debug = <0>;
+			};
+		};
+	};
+};
