@@ -8,28 +8,34 @@
 		target = <&spi1>;
 		__overlay__ {
 			status = "okay";
-
-			spidev@0{
-				status = "disabled";
-			};
-
-			spidev@1{
-				status = "disabled";
-			};
 		};
 	};
 
 	fragment@1 {
-		target = <&pio>;
+		target = <&spidev0>;
 		__overlay__ {
-			opiz_display_pins: opiz_display_pins {
-                pins = "PC9\0PC6\0PC5";
-                function = <1 1 1>;
-			};
+			status = "disabled";
 		};
 	};
 
 	fragment@2 {
+		target = <&spidev1>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@3 {
+		target = <&pio>;
+		__overlay__ {
+			opiz_display_pins: opiz_display_pins {
+                pins = "PC9\0PC6\0PC5";
+                function = "gpio_out";
+			};
+		};
+	};
+
+	fragment@4 {
 		target = <&spi1>;
 		__overlay__ {
 			/* needed to avoid dtc warning */
@@ -37,7 +43,7 @@
 			#size-cells = <0>;
 
 			opizdisplay: opiz-display@0{
-				compatible = "ilitek,ili9488";
+				compatible = "ilitek,ili9486";
 				reg = <0>;
 				pinctrl-names = "default";
 				pinctrl-0 = <&opiz_display_pins>;
@@ -48,11 +54,36 @@
 				bgr;
 				fps = <60>;
 				buswidth = <8>;
-				reset-gpios = <&pio 0 73 0>;
+				reset-gpios = <&pio 0 73 1>;
 				dc-gpios = <&pio 0 70 0>;
                 led-gpios = <&pio 0 69 1>;
-				debug = <0>;
+
+				init = <
+					0x100003A
+					0x55  // use 16 bits per pixel color
+					//0x66  // use 18 bits per pixel color
+
+					0x1000036
+					0x48  // MX, BGR == rotation 0
+
+					// PGAMCTRL(Positive Gamma Control)
+					0x10000E0 0x0F 0x1F 0x1C 0x0C 0x0F 0x08 0x48 0x98 0x37 0x0A 0x13 0x04 0x11 0x0D 0x00
+					// NGAMCTRL(Negative Gamma Control)
+					0x10000E1 0x0F 0x32 0x2E 0x0B 0x0D 0x05 0x47 0x75 0x37 0x06 0x10 0x03 0x24 0x20 0x00
+					// Digital Gamma Control 1
+					0x10000E2 0x0F 0x32 0x2E 0x0B 0x0D 0x05 0x47 0x75 0x37 0x06 0x10 0x03 0x24 0x20 0x00
+
+					0x1000011  // Sleep OUT
+					0x2000096   // wait some time
+					0x1000029  // Display ON>;
 			};
 		};
 	};
+
+	__overrides__ {
+		speed = <&opizdisplay>,"spi-max-frequency:0";
+		rotate = <&opizdisplay>,"rotation:0";
+		fps = <&opizdisplay>,"fps:0";
+		debug = <&opizdisplay>,"debug:0";
+  	};
 };
